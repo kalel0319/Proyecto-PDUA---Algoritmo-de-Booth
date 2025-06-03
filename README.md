@@ -5,3 +5,6 @@ El objetivo de esta implementación es ilustrar cómo el Algoritmo de Booth perm
 # Pasos
 Copiar el archivo CodigoPduaBinario.txt y pegarlo en la RAM del circuit en circuitverse.
 Link: -------
+Grupo 4
+- Kalel Ordoñez
+- Juan Diego León
