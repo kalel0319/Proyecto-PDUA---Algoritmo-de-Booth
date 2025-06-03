@@ -4,4 +4,4 @@ Este proyecto implementa una rutina de multiplicación para números enteros con
 El objetivo de esta implementación es ilustrar cómo el Algoritmo de Booth permite realizar la multiplicación de dos operandos en complemento a dos, optimizando el número de sumas y restas necesarias. Además, se busca fortalecer la comprensión del funcionamiento interno de un procesador a nivel de registros y operaciones bit a bit.
 # Pasos
 Copiar el archivo CodigoPduaBinario.txt y pegarlo en la RAM del circuit en circuitverse.
-Link: 
+Link: -------
