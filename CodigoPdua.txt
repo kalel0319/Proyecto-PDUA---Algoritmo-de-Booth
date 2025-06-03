@@ -1,0 +1,291 @@
+INIT_loop:
+LSB_de_Q: MOV ACC, CTE              # Cargar dirección de Q en ACC
+Q                        # (valor constante de dirección de Q)
+MOV DPTR, ACC             # Mover dirección de Q al DPTR
+MOV ACC, [DPTR]           # Cargar Q en ACC
+MOV A, ACC                # Copiar Q a A para hacer la operación
+MOV ACC, CTE              # Cargar máscara Mask_LSB
+Mask_LSB                  # Mask_LSB - 00000001
+AND ACC, A                # Hacer AND con el valor original
+-LSB_Q: INV ACC                   # Complemento a uno de ACC (ACC = LSB(Q))
+MOV A, ACC                # Cargar el complemento en A
+MOV ACC, CTE              # Cargar la dirección de 1 en ACC
+0x01                      # CTE + 1
+ADD ACC, A                # ACC = -LSB(Q), en complemento a dos
+MOV A, ACC                # Cargar -LSB(Q) en A
+
+Cargar_Q-1: MOV ACC, CTE              # Cargar dirección de Q-1 en ACC
+Q-1                       # CTE - dirección de Q-1
+MOV DPTR, ACC             # Mover dirección de Q-1 a DPTR
+MOV ACC, [DPTR]           # Cargar Q-1 en ACC
+ADD ACC, A                # ACC = -LSB(Q) + Q-1
+
+SON_IGUALES:
+JZ L_S_R                  # Si -LSB(Q) + Q-1 = 0. LSB(Q) == 1 y Q-1 = 1 o LSB(Q) == 0 y Q-1 = 0
+                          # Si LSB(Q) = Q-1, saltar a L_S_R (Desplazamiento lógico a la derecha)
+
+LSB_de_Q:
+MOV ACC, CTE              # Cargar dirección de Q en ACC
+Q                         # (valor constante de dirección de Q)
+MOV DPTR, ACC             # Mover dirección de Q al DPTR
+MOV ACC, [DPTR]           # Cargar Q en ACC
+MOV A, ACC                # Copiar Q a A para hacer la operación
+MOV ACC, CTE              # Cargar máscara Mask_LSB
+Mask_LSB                  # Mask_LSB - 00000001
+AND ACC, A                # Hacer AND con el valor original
+MOV A, ACC                # Ahora A tiene el valor del LSB de Q = Q0
+
+SON_DIFERENTES:
+MOV ACC, CTE              # Cargar CTE -1
+0xFF                      # Cargar –1
+
+COMPROBAR_LSB_Q:
+ADD ACC, A                # LSB(Q) + (-1)
+JZ RESTA                  # Si LSB(Q) + (-1) = 0, entonces LSB(Q)=1.
+                          # Si LSB(Q) = 1, RESTA. Si LSB(Q) = 0, SUMA.
+
+SUMA:
+MOV ACC, CTE              # Cargar dirección de K en ACC
+K                         # CTE - dirección de K
+MOV DPTR, ACC             # Mover dirección de K a DPTR
+MOV ACC, [DPTR]           # Cargar K en ACC
+MOV A, ACC                # Cargar K en el registro A
+MOV ACC, CTE              # Cargar dirección de M en ACC
+M                         # CTE - dirección de M
+MOV DPTR, ACC             # Mover dirección de M a DPTR
+MOV ACC, [DPTR]           # Cargar M en ACC
+ADD ACC, A                # ACC = K + M
+MOV A, ACC                # Cargar K + M en A
+
+SALTO_ACTUALIZAR_K:
+JMP CTE                   # Saltar a L_S_R
+ACTUALIZAR_K              # Saltar a ACTUALIZAR_K cuando la suma haya terminado, así se actualiza K
+
+RESTA:
+MOV ACC, CTE              # Cargar dirección de M en ACC
+M                         # CTE - dirección de M
+MOV DPTR, ACC             # Mover dirección de M a DPTR
+MOV ACC, [DPTR]           # Cargar M en ACC
+
+-M:
+INV ACC                   # Complemento a uno de ACC (ACC = M)
+MOV A, ACC                # Cargar complemento de M en A
+MOV ACC, CTE              # Cargar dirección de 1 en ACC
+0x01                      # CTE + 1
+ADD ACC, A                # ACC = -M (complemento a dos)
+MOV A, ACC                # Cargar -M en A
+
+MOV ACC, CTE              # Cargar dirección de K en ACC
+K                         # CTE - dirección de K
+MOV DPTR, ACC             # Mover dirección de K a DPTR
+MOV ACC, [DPTR]           # Cargar K en ACC
+ADD ACC, A                # ACC = K + (-M)
+MOV A, ACC                # Cargar resultado en A
+
+ACTUALIZAR_K:
+MOV ACC, CTE              # Cargar dirección de K en ACC
+K                         # CTE - dirección de K
+MOV DPTR, ACC             # Mover dirección de K a DPTR
+MOV ACC, A                # Mover A a ACC (ACC = K - M o K + M)
+MOV [DPTR], ACC           # Guardar nuevo valor de K
+
+L_S_R:
+MOV ACC, CTE              # Cargar dirección de Q en ACC
+Q                         # CTE - dirección de Q
+MOV DPTR, ACC             # Mover dirección de Q a DPTR
+MOV ACC, [DPTR]           # Cargar Q en ACC
+
+LSB_de_Q:
+MOV A, ACC                # Copiar Q a A para hacer la operación
+MOV ACC, CTE              # Cargar máscara Mask_LSB
+Mask_LSB                  # Mask_LSB - 00000001
+AND ACC, A                # Hacer AND con el valor original
+MOV A, ACC                # Cargar el bit menos significativo de Q en A
+                          # Ahora A tiene el valor del LSB de Q = Q0
+
+ACTUALIZAR_Q-1:
+MOV ACC, CTE              # Cargar dirección de Q-1 en ACC
+Q-1                       # CTE - dirección de Q-1
+MOV DPTR, ACC             # Mover dirección de Q-1 a DPTR
+MOV ACC, A                # Mover A a ACC (ACC = LSB Q)
+MOV [DPTR], ACC           # Guardar ACC en Q-1
+
+DESPLAZAMIENTO_Q:
+MOV ACC, CTE              # Cargar dirección de Q en ACC
+Q                         # CTE - dirección de Q
+MOV DPTR, ACC             # Mover dirección de Q a DPTR
+MOV ACC, [DPTR]           # Cargar Q en ACC
+LSR ACC                   # Desplazamiento lógico a la derecha de ACC = Q
+MOV A, ACC                # Cargar el resultado del LSR de Q en A
+
+ACTUALIZAR_Q:
+MOV ACC, CTE              # Cargar dirección de Q en ACC
+Q                         # CTE - dirección de Q
+MOV DPTR, ACC             # Mover dirección de Q a DPTR
+MOV ACC, A                # Mover A a ACC (ACC = LSR Q)
+MOV [DPTR], ACC           # Guardar ACC en Q
+
+CARGAR_LSB_K:
+MOV ACC, CTE              # Cargar dirección de K en ACC
+K                         # CTE - dirección de K
+MOV DPTR, ACC             # Mover dirección de K a DPTR
+MOV ACC, [DPTR]           # Cargar K en ACC
+
+LSB_de_K:
+MOV A, ACC                # Copiar K a A para hacer la operación
+MOV ACC, CTE              # Cargar máscara Mask_LSB
+Mask_LSB                  # Mask_LSB - 00000001
+AND ACC, A                # Hacer AND con el valor original
+MOV A, ACC                # cargar K0 en A
+                          # Ahora A tiene el valor del LSB de K = K0
+
+CARGAR_-1:
+MOV ACC, CTE              # Cargar CTE -1
+0xFF                      # Cargar -1
+
+ADD ACC, A                # (-1) + LSB(A)
+JZ 1_OR_Q                 # Si –1 + LSB(A) = 0, entonces LSB(A) = 1
+                          # Saltar a 1_OR_Q PARA CAMBIAR EL MSB DE Q A 1
+
+// cambia 0 al MSB DE Q
+0_AND_Q:
+MOV ACC, CTE              # No es necesario saltar. Cargar dirección de Q en ACC
+Q                         # CTE - dirección de Q
+MOV DPTR, ACC             # Mover dirección de Q a DPTR
+MOV ACC, [DPTR]           # Cargar Q en ACC
+MOV A, ACC                # Cargar Q en A
+MOV ACC, CTE              # Cargar dirección de la máscara AND
+Mask_AND                  # CTE - dirección de Mask_AND
+MOV DPTR, ACC             # Mover dirección de Mask_AND a DPTR
+MOV ACC, [DPTR]           # Cargar Mask_AND en ACC
+AND ACC, A                # Q AND Mask_AND
+MOV A, ACC                # Cargar ACC en A
+JMP CTE                   # Saltar a ACTUALIZAR_Q_AND_OR
+ACTUALIZAR_Q_AND_OR
+
+// CAMBIA 1 AL MSB DE Q
+1_OR_Q:
+MOV ACC, CTE              # Cargar dirección de Q en ACC
+Q                         # CTE - dirección de Q
+MOV DPTR, ACC             # Mover dirección de Q a DPTR
+MOV ACC, [DPTR]           # Cargar Q en ACC
+MOV A, ACC                # Cargar Q en A
+MOV ACC, CTE              # Cargar dirección de Mask_OR
+Mask_OR                   # CTE - dirección de Mask_OR
+MOV DPTR, ACC             # Mover dirección de Mask_OR a DPTR
+MOV ACC, [DPTR]           # Cargar Mask_OR en ACC
+OR ACC, A                 # Q OR Mask_OR
+MOV A, ACC                # Cargar ACC en A
+
+CARGAR_Q_AND_OR:
+MOV ACC, CTE              # Cargar dirección de Q en ACC
+Q                         # CTE - dirección de Q
+MOV DPTR, ACC             # Mover dirección de Q a DPTR
+MOV ACC, A                # Mover A al registro ACC
+MOV [DPTR], ACC           # Almacenar nuevo valor de Q
+
+// DEJA EL MISMO MSB EN SU LUGAR, DADO Q SE SUPONE Q ESTE PASA A MSB-1
+CARGAR_MSB_K:
+MOV ACC, CTE              # Cargar dirección de K en ACC
+K                         # CTE - dirección de K
+MOV DPTR, ACC             # Mover dirección de K a DPTR
+MOV ACC, [DPTR]           # Cargar K en ACC
+MSB_de_K:
+MOV A, ACC                # Copiar K a A para hacer la operación
+MOV ACC, CTE              # Cargar máscara MASK_OR
+MASK_OR                   # MASK_OR - 10000000
+AND ACC, A                # Hacer AND con el valor original
+MOV A, ACC                # cargar K0 en A
+                          # Ahora A tiene el valor del MSB de K
+
+CARGAR_-1:
+MOV ACC, CTE              # Cargar CTE -1
+0xFF                      # Cargar -1
+
+ADD ACC, A                # MSB(A) + (-1)
+
+COMPARACION_MSB_K:
+JN 0_AND_K                # Si es negativo (MSB=0) MSB(A) + (-1) < 0
+JZ 1_OR_K                 # Si es = 0, entonces MSB=1 MSB(A) + (-1) = 0
+
+0_AND_K:
+MOV ACC, CTE              # Cargar dirección de K en ACC
+K                         # CTE - dirección de K
+MOV DPTR, ACC             # Mover dirección de K a DPTR
+MOV ACC, [DPTR]           # Cargar K en ACC
+LSR ACC                   # Desplazamiento lógico a la derecha
+MOV A, ACC                # Cargar valor desplazado en el registro A
+MOV ACC, CTE              # Cargar dirección de Mask_AND
+Mask_AND                  # CTE - dirección de Mask_AND
+MOV DPTR, ACC             # Mover dirección a DPTR
+MOV ACC, [DPTR]           # Cargar Mask_AND en ACC
+AND ACC, A                # K AND Mask_AND
+MOV A, ACC                # Cargar resultado en A
+JMP CTE                   # Saltar a ACTUALIZAR_A_AND_OR
+ACTUALIZAR_A_AND_OR
+
+1_OR_K:
+MOV ACC, CTE              # Cargar dirección de K en ACC
+K                         # CTE - dirección de K
+MOV DPTR, ACC             # Mover dirección de K a DPTR
+MOV ACC, [DPTR]           # Cargar A_var en ACC
+LSR ACC                   # Desplazamiento lógico a la derecha
+MOV A, ACC                # Cargar valor desplazado en el registro A
+MOV ACC, CTE              # Cargar dirección de Mask_OR
+Mask_OR                   # CTE - dirección de Mask_OR
+MOV DPTR, ACC             # Mover dirección a DPTR
+MOV ACC, [DPTR]           # Cargar Mask_OR en ACC
+OR ACC, A                 # K OR Mask_OR
+MOV A, ACC                # Cargar resultado en A
+
+ACTUALIZAR_K_AND_OR:
+MOV ACC, CTE              # Cargar dirección de K en ACC
+K                         # CTE - dirección de K
+MOV DPTR, ACC             # Mover dirección de K a DPTR
+MOV ACC, A                # Mover A al registro ACC
+MOV [DPTR], ACC           # Almacenar nuevo valor de K
+
+Test_loop:
+MOV ACC, CTE              # Cargar CTE -1
+0xFF                      # Cargar -1
+MOV A, ACC                # Cargar -1 en el registro A
+MOV ACC, CTE              # Cargar dirección de contador en ACC
+contador                  # CTE - dirección de contador
+MOV DPTR, ACC             # Mover dirección a DPTR
+MOV ACC, [DPTR]           # Cargar contador en ACC
+ADD ACC, A                # contador --
+MOV A, ACC                # Actualizar A con nuevo contador
+
+ACTUALIZAR_contador:
+MOV ACC, CTE              # Cargar dirección de contador en ACC
+contador                  # CTE - dirección de contador
+MOV DPTR, ACC             # Mover dirección de contador a DPTR
+MOV ACC, A                # Mover A al registro ACC
+MOV [DPTR], ACC           # Almacenar nuevo valor de contador
+MOV ACC, A                # Generar banderas
+JZ END_loop               # Si contador == 0, ir a END_LOOP
+JMP CTE                   # Si no, repetir ciclo
+INIT_loop
+
+END_loop:
+MOV ACC, CTE              # Cargar dirección de K
+K                         # CTE - dirección de K
+MOV DPTR, ACC             # Mover K a DPTR
+MOV ACC, [DPTR]           # Cargar K en ACC
+MOV A, ACC                # Mover a K A
+MOV ACC, CTE              # Cargar dirección de Q
+Q                         # CTE - dirección de Q
+MOV DPTR, ACC             # Mover a DPTR
+MOV ACC, [DPTR]           # Cargar Q
+
+END_Program:
+HALT
+
+Q:          0xFD           # Q = 11111101 (Multiplicador = -3)
+M:          0x07           # M = 00000111 (Multiplicando = 7)
+Q-1:        0x00           # Q-1 = 0 (Se usa solo el LSB)
+K:          0x00           # K= 00000000 (Acumulador)
+contador:   0x08           # Conteo de bits = 8
+Mask_AND:   0x7F           # 01111111 = 127
+Mask_OR:    0x80           # 10000000 = 128
+Mask_LSB:   0x01           # 00000001
